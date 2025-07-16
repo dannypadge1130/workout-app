@@ -7,6 +7,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 export default function ExerciseTypePage() {
 
+  const apiOrigin = import.meta.env.VITE_API_ORIGIN;
+
   // Init state variables
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -18,7 +20,7 @@ export default function ExerciseTypePage() {
   const [editDescription, setEditDescription] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:8000/exercise_types', { credentials: 'include' })
+    fetch(`${apiOrigin}/exercise_types`, { credentials: 'include' })
       .then(res => res.json())
       .then(setExerciseTypes);
   }, [refresh]);
@@ -26,7 +28,7 @@ export default function ExerciseTypePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const res = await fetch('http://localhost:8000/exercise_types', {
+    const res = await fetch(`${apiOrigin}/exercise_types`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -51,7 +53,7 @@ export default function ExerciseTypePage() {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const res = await fetch(`http://localhost:8000/exercise_types/${editingId}`, {
+    const res = await fetch(`${apiOrigin}/exercise_types/${editingId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -68,7 +70,7 @@ export default function ExerciseTypePage() {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this exercise type?')) return;
-    const res = await fetch(`http://localhost:8000/exercise_types/${id}`, {
+    const res = await fetch(`${apiOrigin}/exercise_types/${id}`, {
       method: 'DELETE',
       credentials: 'include',
     });

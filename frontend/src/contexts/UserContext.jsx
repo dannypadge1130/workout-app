@@ -5,9 +5,11 @@ const UserContext = createContext();
 export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
 
+  const apiOrigin = import.meta.env.VITE_API_ORIGIN;
+
   // Check login status on mount
   useEffect(() => {
-    fetch('http://localhost:8000/me', { credentials: 'include' })
+    fetch(`${apiOrigin}/me`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => setUser(data.username ? { username: data.username } : null));
   }, []);
@@ -16,7 +18,7 @@ export function UserProvider({ children }) {
   const login = async (username, password) => {
 
     // Call to the login API endpoint
-    const res = await fetch('http://localhost:8000/login', {
+    const res = await fetch(`${apiOrigin}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -36,7 +38,7 @@ export function UserProvider({ children }) {
 
   // Logout action
   const logout = async () => {
-    await fetch('http://localhost:8000/logout', {
+    await fetch(`${apiOrigin}/logout`, {
       method: 'POST',
       credentials: 'include',
     });
