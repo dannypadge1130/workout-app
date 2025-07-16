@@ -1,6 +1,10 @@
-from flask_sqlalchemy import SQLAlchemy
+from extensions import db
+from flask_login import UserMixin
 
-db = SQLAlchemy()
+# Simple user model (for single user)
+class User(UserMixin):
+    def __init__(self, id):
+        self.id = id
 
 # Workout for the day. This includes the current date and personal weight for the day
 class Workout(db.Model):
