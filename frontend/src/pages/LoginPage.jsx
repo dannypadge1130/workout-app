@@ -14,8 +14,6 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState('');
 
-  const apiOrigin = import.meta.env.VITE_API_ORIGIN;
-
   // Function to handle the submit action
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,8 +29,6 @@ export default function LoginPage() {
     }
     setLoading(false);
   };
-
-  console.log('API Origin:', apiOrigin);
 
   return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
