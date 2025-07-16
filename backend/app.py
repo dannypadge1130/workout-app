@@ -25,6 +25,10 @@ def create_app():
         return User.query.get(user_id)
 
     with app.app_context():
+        # init db
+        db.create_all()
+
+        # register routes
         from routes import routes
         app.register_blueprint(routes)  # Register routes
 
