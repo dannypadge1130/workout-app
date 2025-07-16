@@ -3,8 +3,10 @@ import React, { useEffect, useState } from 'react';
 function ExerciseTypeList() {
   const [exerciseTypes, setExerciseTypes] = useState([]);
 
+  const apiOrigin = import.meta.env.VITE_API_ORIGIN;
+
   useEffect(() => {
-    fetch('http://localhost:8000/exercise_types')
+    fetch(`${apiOrigin}/exercise_types`)
       .then(res => res.json())
       .then(data => setExerciseTypes(data));
   }, []);

@@ -3,11 +3,14 @@ import { Link } from 'react-router-dom';
 import { Box, Paper, Typography, List, ListItem, ListItemText, CircularProgress } from '@mui/material';
 
 export default function WorkoutsPage() {
+  
+  const apiOrigin = import.meta.env.VITE_API_ORIGIN;
+  
   const [workouts, setWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:8000/workouts', { credentials: 'include' })
+    fetch(`${apiOrigin}/workouts`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         // Sort by date descending

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Paper, Typography, TextField, Button, Alert } from '@mui/material';
 
+const apiOrigin = import.meta.env.VITE_API_ORIGIN;
+
 export default function NewWorkoutForm() {
   const [date, setDate] = useState('');
   const [todaysWeight, setTodaysWeight] = useState('');
@@ -11,7 +13,7 @@ export default function NewWorkoutForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const res = await fetch('http://localhost:8000/workouts', {
+    const res = await fetch(`${apiOrigin}/workouts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

@@ -5,10 +5,12 @@ function AddExerciseTypeForm({ onAdd }) {
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
 
+  const apiOrigin = import.meta.env.VITE_API_ORIGIN;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const res = await fetch('http://localhost:8000/exercise_types', {
+    const res = await fetch(`${apiOrigin}/exercise_types`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, description }),

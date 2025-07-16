@@ -5,6 +5,9 @@ import {
 } from '@mui/material';
 
 export default function WorkoutDetailPage() {
+
+  const apiOrigin = import.meta.env.VITE_API_ORIGIN;
+
   const { id } = useParams();
   const [workout, setWorkout] = useState(null);
   const [exerciseTypes, setExerciseTypes] = useState([]);
@@ -16,7 +19,7 @@ export default function WorkoutDetailPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`http://localhost:8000/workouts/${id}`, { credentials: 'include' })
+    fetch(`${apiOrigin}/workouts/${id}`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         setWorkout(data);
@@ -26,7 +29,7 @@ export default function WorkoutDetailPage() {
 
   // Fetch exercise types
   useEffect(() => {
-    fetch('http://localhost:8000/exercise_types', { credentials: 'include' })
+    fetch(`${apiOrigin}/exercise_types`, { credentials: 'include' })
       .then(res => res.json())
       .then(setExerciseTypes);
   }, []);
@@ -46,7 +49,7 @@ export default function WorkoutDetailPage() {
     e.preventDefault();
     setError('');
     // 1. Create the exercise
-    const res = await fetch('http://localhost:8000/exercises', {
+    const res = await fetch(`${apiOrigin}/exercises`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -62,7 +65,7 @@ export default function WorkoutDetailPage() {
     const exercise = await res.json();
     // 2. Add sets
     for (const set of sets) {
-      await fetch('http://localhost:8000/exercise_sets', {
+      await fetch(`${apiOrigin}/exercise_sets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
