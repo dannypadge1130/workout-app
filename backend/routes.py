@@ -3,7 +3,7 @@ import os
 from flask import Blueprint, request, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 
-from extensions import login_manager
+from extensions import login_manager, s3
 from models import User
 
 ## Import required services to support controllers
@@ -11,7 +11,7 @@ from models import User
 # Exercise Type Services
 from services.exercise_type_service import (
     create_exercise_type, get_all_exercise_types, get_exercise_type_by_id,
-    update_exercise_type, delete_exercise_type
+    update_exercise_type, delete_exercise_type, upload_photo_to_s3
 )
 
 # Workout Services
@@ -135,13 +135,13 @@ def delete_workout_route(workout_id):
 @routes.route('/exercise_types', methods=['POST'])
 @login_required
 def create_exercise_type_route():
-    data = request.get_json()
-    name = data.get('name')
-    description = data.get('description')
-    if not name:
+    data = dict(request.form)
+    if 'photo' in request.files:
+        data = {**data, 'photo': request.files['photo']}
+    if not data.get('name'):
         return jsonify({'error': 'Name is required'}), 400
     try:
-        exercise_type = create_exercise_type(name, description)
+        exercise_type = create_exercise_type(data)
         return jsonify(exercise_type.to_dict()), 201
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
@@ -166,11 +166,11 @@ def get_exercise_type_by_id_route(exercise_type_id):
 @routes.route('/exercise_types/<int:exercise_type_id>', methods=['PUT'])
 @login_required
 def update_exercise_type_route(exercise_type_id):
-    data = request.get_json()
-    name = data.get('name')
-    description = data.get('description')
+    data = dict(request.form)
+    if 'photo' in request.files:
+        data = {**data, 'photo': request.files['photo']}
     try:
-        exercise_type = update_exercise_type(exercise_type_id, name, description)
+        exercise_type = update_exercise_type(exercise_type_id, data)
         if exercise_type is None:
             return jsonify({'error': 'Exercise type not found'}), 404
         return jsonify(exercise_type.to_dict())
@@ -185,6 +185,25 @@ def delete_exercise_type_route(exercise_type_id):
     if not success:
         return jsonify({'error': 'Exercise type not found'}), 404
     return jsonify({'success': True})
+
+# Upload a photo to S3 for an Exercise Type
+@routes.route('/exercise_types/<int:exercise_type_id>/photo', methods=['POST'])
+@login_required
+def upload_photo_to_s3_route(exercise_type_id):
+    photo = request.files.get('photo')
+    if not photo:
+        return jsonify({'error': 'No photo uploaded'}), 400
+
+    photo_url = upload_photo_to_s3(photo)
+    if not photo_url:
+        return jsonify({'error': 'Photo upload failed'}), 500
+
+    # Update the ExerciseType with the photo URL if it exists
+    updated_exercise_type = update_exercise_type(exercise_type_id, {'photo_url': photo_url})
+    if not updated_exercise_type:
+        return jsonify({'error': 'Exercise type not found'}), 404
+
+    return jsonify({'photo_url': photo_url})
 
 ### EXCERCISE ROUTES
 

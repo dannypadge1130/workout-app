@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box, Paper, Typography, TextField, Button, Alert, List, ListItem, ListItemText, IconButton
+  Box, Paper, Typography, TextField, Button, Alert, List, ListItem, ListItemText, IconButton, MenuItem, Select, InputLabel, FormControl, Avatar
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -18,6 +18,13 @@ export default function ExerciseTypePage() {
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const muscleGroups = [
+    "Chest", "Back", "Shoulders", "Arms", "Legs", "Core"
+  ];
+  const [muscleGroup, setMuscleGroup] = useState('');
+  const [photo, setPhoto] = useState(null);
+  const [editMuscleGroup, setEditMuscleGroup] = useState('');
+  const [editPhoto, setEditPhoto] = useState(null);
 
   useEffect(() => {
     fetch(`${apiOrigin}/exercise_types`, { credentials: 'include' })
@@ -28,15 +35,21 @@ export default function ExerciseTypePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('description', description);
+    formData.append('muscle_group', muscleGroup);
+    if (photo) formData.append('photo', photo);
     const res = await fetch(`${apiOrigin}/exercise_types`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ name, description }),
+      body: formData,
     });
     if (res.ok) {
       setName('');
       setDescription('');
+      setMuscleGroup('');
+      setPhoto(null);
       setRefresh(r => !r);
     } else {
       const data = await res.json();
@@ -48,16 +61,22 @@ export default function ExerciseTypePage() {
     setEditingId(et.id);
     setEditName(et.name);
     setEditDescription(et.description || '');
+    setEditMuscleGroup(et.muscle_group || '');
+    setEditPhoto(null);
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    const formData = new FormData();
+    formData.append('name', editName);
+    formData.append('description', editDescription);
+    formData.append('muscle_group', editMuscleGroup);
+    if (editPhoto) formData.append('photo', editPhoto);
     const res = await fetch(`${apiOrigin}/exercise_types/${editingId}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ name: editName, description: editDescription }),
+      body: formData,
     });
     if (res.ok) {
       setEditingId(null);
@@ -86,7 +105,7 @@ export default function ExerciseTypePage() {
       <Paper elevation={3} sx={{ p: 3 }}>
         <Typography variant="h5" gutterBottom>Create New Exercise Type</Typography>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} encType="multipart/form-data">
           <TextField
             label="Name"
             value={name}
@@ -102,6 +121,33 @@ export default function ExerciseTypePage() {
             margin="normal"
             onChange={e => setDescription(e.target.value)}
           />
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Muscle Group</InputLabel>
+            <Select
+              value={muscleGroup}
+              label="Muscle Group"
+              onChange={e => setMuscleGroup(e.target.value)}
+              required
+            >
+              {muscleGroups.map(group => (
+                <MenuItem key={group} value={group}>{group}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Button
+            variant="contained"
+            component="label"
+            fullWidth
+            sx={{ mt: 2 }}
+          >
+            {photo ? photo.name : 'Upload Photo'}
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={e => setPhoto(e.target.files[0])}
+            />
+          </Button>
           <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
             Add Exercise Type
           </Button>
@@ -124,7 +170,7 @@ export default function ExerciseTypePage() {
               }
             >
               {editingId === et.id ? (
-                <form onSubmit={handleEditSubmit} style={{ width: '100%' }}>
+                <form onSubmit={handleEditSubmit} style={{ width: '100%' }} encType="multipart/form-data">
                   <TextField
                     value={editName}
                     required
@@ -138,6 +184,33 @@ export default function ExerciseTypePage() {
                     margin="dense"
                     onChange={e => setEditDescription(e.target.value)}
                   />
+                  <FormControl fullWidth margin="dense">
+                    <InputLabel>Muscle Group</InputLabel>
+                    <Select
+                      value={editMuscleGroup}
+                      label="Muscle Group"
+                      onChange={e => setEditMuscleGroup(e.target.value)}
+                      required
+                    >
+                      {muscleGroups.map(group => (
+                        <MenuItem key={group} value={group}>{group}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <Button
+                    variant="contained"
+                    component="label"
+                    fullWidth
+                    sx={{ mt: 1 }}
+                  >
+                    {editPhoto ? editPhoto.name : 'Upload New Photo'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={e => setEditPhoto(e.target.files[0])}
+                    />
+                  </Button>
                   <Box display="flex" gap={1} mt={1}>
                     <Button type="submit" variant="contained" color="primary" size="small">Save</Button>
                     <Button type="button" onClick={() => setEditingId(null)} size="small">Cancel</Button>
@@ -145,7 +218,11 @@ export default function ExerciseTypePage() {
                 </form>
               ) : (
                 <ListItemText
-                  primary={<strong>{et.name}</strong>}
+                  primary={<Box display="flex" alignItems="center" gap={2}>
+                    {et.photo_url && <Avatar src={et.photo_url} alt={et.name} />}
+                    <span><strong>{et.name}</strong></span>
+                    <span style={{ fontSize: 12, color: '#666' }}>{et.muscle_group}</span>
+                  </Box>}
                   secondary={et.description}
                 />
               )}
