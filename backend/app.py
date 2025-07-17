@@ -2,6 +2,7 @@ import json
 import os
 
 from flask_cors import CORS
+from flask_migrate import Migrate
 from flask import Flask
 
 from dotenv import load_dotenv
@@ -14,6 +15,8 @@ def create_app():
     app.secret_key = os.environ.get('SECRET_KEY')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    migrate = Migrate(app, db)
 
     db.init_app(app)
     login_manager.init_app(app)
