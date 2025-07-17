@@ -13,7 +13,7 @@ class Workout(db.Model):
     todays_weight = db.Column(db.Double, nullable=False)
 
     # Has a one-to-many relationship with exercises
-    exercises = db.relationship('Exercise', backref='workout', lazy=True)
+    exercises = db.relationship('Exercise', backref='workout', lazy=True, cascade='all, delete-orphan')
 
     def __init__(self, date, todays_weight):
         self.date = date
@@ -54,7 +54,7 @@ class Exercise(db.Model):
     exercise_type = db.relationship('ExerciseType')
 
     # The sets performed during the exercise
-    sets = db.relationship('ExerciseSet', backref='exercise', lazy=True)
+    sets = db.relationship('ExerciseSet', backref='exercise', lazy=True, cascade='all, delete-orphan')
 
     def __init__(self, workout_id, exercise_type_id):
         self.workout_id = workout_id

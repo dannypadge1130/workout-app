@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Box, Paper, Typography, List, ListItem, ListItemText, CircularProgress } from '@mui/material';
+import { Box, Paper, Typography, List, ListItem, ListItemText, CircularProgress, IconButton } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 export default function WorkoutsPage() {
   
@@ -19,6 +20,15 @@ export default function WorkoutsPage() {
       });
   }, []);
 
+  const handleDeleteWorkout = async (workoutId) => {
+    if (!window.confirm('Delete this workout?')) return;
+    await fetch(`${apiOrigin}/workouts/${workoutId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    setWorkouts(workouts => workouts.filter(wk => wk.id !== workoutId));
+  };
+
   return (
     <Box sx={{ maxWidth: 500, mx: 'auto', mt: 4 }}>
       <Paper elevation={3} sx={{ p: 3 }}>
@@ -31,11 +41,28 @@ export default function WorkoutsPage() {
           <List>
             {workouts.length === 0 && <Typography>No workouts found.</Typography>}
             {workouts.map(wk => (
-              <ListItem key={wk.id} component={Link} to={`/workout/${wk.id}`} button sx={{ mb: 1, borderRadius: 2 }}>
+              <ListItem
+                key={wk.id}
+                component={Link}
+                to={`/workout/${wk.id}`}
+                button
+                sx={{ mb: 1, borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <ListItemText
                   primary={`Date: ${wk.date}`}
                   secondary={`Today's Weight: ${wk.todays_weight}`}
                 />
+                <IconButton
+                  edge="end"
+                  aria-label="delete"
+                  onClick={e => {
+                    e.preventDefault(); // Prevent navigation
+                    handleDeleteWorkout(wk.id);
+                  }}
+                  color="error"
+                >
+                  <DeleteIcon />
+                </IconButton>
               </ListItem>
             ))}
           </List>

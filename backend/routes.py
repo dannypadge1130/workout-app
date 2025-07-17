@@ -6,18 +6,30 @@ from flask_login import login_user, logout_user, login_required, current_user
 from extensions import login_manager
 from models import User
 
-# Import required services to support controllers
+## Import required services to support controllers
+
+# Exercise Type Services
 from services.exercise_type_service import (
-    create_exercise_type, get_all_exercise_types,
+    create_exercise_type, get_all_exercise_types, get_exercise_type_by_id,
     update_exercise_type, delete_exercise_type
 )
+
+# Workout Services
 from services.workout_service import (
-    create_workout, get_all_workouts, 
-    get_workout_by_id
+    create_workout, delete_workout, get_all_workouts, 
+    get_workout_by_id, update_workout
 )
+
+# Exercise Services
 from services.exercise_service import (
-    create_exercise, get_exercises,
-    create_exercise_set, get_exercise_sets
+    create_exercise, get_exercise_by_id, get_exercises,
+    delete_exercise
+)
+
+# Exercise Set Services
+from services.excercise_set_service import (
+    create_exercise_set, get_exercise_set_by_id, get_exercise_sets,
+    update_exercise_set, delete_exercise_set
 )
 
 # Replace with your own username/password
@@ -26,12 +38,16 @@ PASSWORD = os.environ.get('PASSWORD')
 
 routes = Blueprint('routes', __name__)
 
+## USER ROUTES
+
+# Load user based on User ID
 @login_manager.user_loader
 def load_user(user_id):
     if user_id == USERNAME:
         return User(user_id)
     return None
 
+# Login route
 @routes.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -43,19 +59,24 @@ def login():
         return jsonify({'success': True})
     return jsonify({'error': 'Invalid credentials'}), 401
 
+# Logout route
 @routes.route('/logout', methods=['POST'])
 @login_required
 def logout():
     logout_user()
     return jsonify({'success': True})
 
+# Pull details about currently authenticated user
 @routes.route('/me')
 def me():
     if current_user.is_authenticated:
         return jsonify({'username': current_user.id})
     return jsonify({'username': None})
 
-# Create a new Workout
+
+### WORKOUT ROUTES
+
+# Create a new workout
 @routes.route('/workouts', methods=['POST'])
 @login_required
 def create_workout_route():
@@ -89,6 +110,27 @@ def get_workout_by_id_route(workout_id):
         return jsonify({'error': 'Workout not found'}), 404
     return jsonify(workout.to_dict())
 
+# Update a Workout
+@routes.route('/workouts/<int:workout_id>', methods=['PUT'])
+@login_required
+def update_workout_route(workout_id):
+    data = request.get_json()
+    workout = update_workout(workout_id, data)
+    if not workout:
+        return jsonify({'error': 'Workout not found'}), 404
+    return jsonify(workout.to_dict())
+
+# Delete a Workout
+@routes.route('/workouts/<int:workout_id>', methods=['DELETE'])
+@login_required
+def delete_workout_route(workout_id):
+    success = delete_workout(workout_id)
+    if not success:
+        return jsonify({'error': 'Workout not found'}), 404
+    return jsonify({'success': True})
+
+### EXCERCISE TYPE ROUTES
+
 # Create a new Exercise Type
 @routes.route('/exercise_types', methods=['POST'])
 @login_required
@@ -110,6 +152,15 @@ def create_exercise_type_route():
 def get_exercise_types_route():
     exercise_types = get_all_exercise_types()
     return jsonify([et.to_dict() for et in exercise_types])
+
+# Fetch an Exercise Type by ID
+@routes.route('/exercise_types/<int:exercise_type_id>', methods=['GET'])
+@login_required
+def get_exercise_type_by_id_route(exercise_type_id):
+    exercise_type = get_exercise_type_by_id(exercise_type_id)
+    if exercise_type is None:
+        return jsonify({'error': 'Exercise type not found'}), 404
+    return jsonify(exercise_type.to_dict())
 
 # Update an Exercise Type
 @routes.route('/exercise_types/<int:exercise_type_id>', methods=['PUT'])
@@ -135,6 +186,8 @@ def delete_exercise_type_route(exercise_type_id):
         return jsonify({'error': 'Exercise type not found'}), 404
     return jsonify({'success': True})
 
+### EXCERCISE ROUTES
+
 # Create Exercise
 @routes.route('/exercises', methods=['POST'])
 @login_required
@@ -154,6 +207,26 @@ def list_exercises_route():
     workout_id = request.args.get('workout_id')
     exercises = get_exercises(workout_id)
     return jsonify([e.to_dict() for e in exercises])
+
+# Fetch an Exercise by ID
+@routes.route('/exercises/<int:exercise_id>', methods=['GET'])
+@login_required
+def get_exercise_by_id_route(exercise_id):
+    exercise = get_exercise_by_id(exercise_id)
+    if exercise is None:
+        return jsonify({'error': 'Exercise not found'}), 404
+    return jsonify(exercise.to_dict())
+
+# Delete an Exercise
+@routes.route('/exercises/<int:exercise_id>', methods=['DELETE'])
+@login_required
+def delete_exercise_route(exercise_id):
+    success = delete_exercise(exercise_id)
+    if not success:
+        return jsonify({'error': 'Exercise not found'}), 404
+    return jsonify({'success': True})
+
+### EXCERCISE SET ROUTES
 
 # Create ExerciseSet
 @routes.route('/exercise_sets', methods=['POST'])
@@ -176,6 +249,30 @@ def list_exercise_sets_route():
     sets = get_exercise_sets(exercise_id)
     return jsonify([s.to_dict() for s in sets])
 
-@routes.route('/')
-def home():
-    return "Workout Tracker App is running"
+# Fetch an Exercise Set by ID
+@routes.route('/exercise_sets/<int:exercise_set_id>', methods=['GET'])
+@login_required
+def get_exercise_set_by_id_route(exercise_set_id):
+    exercise_set = get_exercise_set_by_id(exercise_set_id)
+    if exercise_set is None:
+        return jsonify({'error': 'Exercise set not found'}), 404
+    return jsonify(exercise_set.to_dict())
+
+# Update an Exercise Set
+@routes.route('/exercise_sets/<int:exercise_set_id>', methods=['PUT'])
+@login_required
+def update_exercise_set_route(exercise_set_id):
+    data = request.get_json()
+    exercise_set = update_exercise_set(exercise_set_id, data)
+    if not exercise_set:
+        return jsonify({'error': 'Exercise set not found'}), 404
+    return jsonify(exercise_set.to_dict())
+
+# Delete an Exercise Set
+@routes.route('/exercise_sets/<int:exercise_set_id>', methods=['DELETE'])
+@login_required
+def delete_exercise_set_route(exercise_set_id):
+    success = delete_exercise_set(exercise_set_id)
+    if not success:
+        return jsonify({'error': 'Exercise set not found'}), 404
+    return jsonify({'success': True})
