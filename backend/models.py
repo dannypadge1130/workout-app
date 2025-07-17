@@ -13,7 +13,7 @@ class Workout(db.Model):
     todays_weight = db.Column(db.Double, nullable=False)
 
     # Has a one-to-many relationship with exercises
-    exercises = db.relationship('Exercise', backref='workout', lazy=True)
+    exercises = db.relationship('Exercise', backref='workout', lazy=True, cascade='all, delete-orphan')
 
     def __init__(self, date, todays_weight):
         self.date = date
@@ -32,16 +32,22 @@ class ExerciseType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.String(200), nullable=True)
+    muscle_group = db.Column(db.String(100), nullable=False)
+    photo_url = db.Column(db.String(300), nullable=True)
 
-    def __init__(self, name, description=None):
+    def __init__(self, name, description=None, muscle_group=None, photo_url=None):
         self.name = name
         self.description = description
+        self.muscle_group = muscle_group
+        self.photo_url = photo_url
 
     def to_dict(self):
         return {
             'id': self.id,
             'name': self.name,
-            'description': self.description
+            'description': self.description,
+            'muscle_group': self.muscle_group,
+            'photo_url': self.photo_url,
         }
 
 # Exercise performed during workout
@@ -54,7 +60,7 @@ class Exercise(db.Model):
     exercise_type = db.relationship('ExerciseType')
 
     # The sets performed during the exercise
-    sets = db.relationship('ExerciseSet', backref='exercise', lazy=True)
+    sets = db.relationship('ExerciseSet', backref='exercise', lazy=True, cascade='all, delete-orphan')
 
     def __init__(self, workout_id, exercise_type_id):
         self.workout_id = workout_id
