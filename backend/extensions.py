@@ -14,3 +14,4 @@ s3 = boto3.client(
 )
 
 BUCKET = os.environ.get('AWS_S3_BUCKET')
+print("BUCKET:", BUCKET)
