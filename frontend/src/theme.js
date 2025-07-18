@@ -3,27 +3,31 @@ import { createTheme } from '@mui/material/styles';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#388e3c',      // Leafy Green
-      contrastText: '#fff',
+      main: '#0050A0', // Vault-Tec Blue
+      contrastText: '#FBE850', // Pip-Boy Yellow for contrast
     },
     secondary: {
-      main: '#a5d6a7',      // Light Green
-      contrastText: '#2e7d32',
+      main: '#FBE850', // Pip-Boy Yellow
+      contrastText: '#0050A0', // Vault-Tec Blue for contrast
     },
     background: {
-      default: '#f1f8e9',   // Very Light Green
+      default: '#F8F3E3', // Retro Cream
       paper: '#fff',
     },
+    error: {
+      main: '#D44D4D', // Highlight Red
+      contrastText: '#fff',
+    },
     accent: {
-      main: '#8d6e63',      // Earthy Brown
+      main: '#FBE850', // Pip-Boy Yellow as accent
     },
     text: {
-      primary: '#2e7d32',   // Deep Green
-      secondary: '#388e3c',
+      primary: '#333333', // Wasteland Gray
+      secondary: '#0050A0', // Vault-Tec Blue
     },
   },
   typography: {
-    fontFamily: 'Segoe UI, Arial, sans-serif',
+    fontFamily: '"Futura Condensed Extra Bold", "Segoe UI", Arial, sans-serif',
   },
 });
 

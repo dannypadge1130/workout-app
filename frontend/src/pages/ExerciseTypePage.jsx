@@ -153,9 +153,20 @@ export default function ExerciseTypePage() {
           </Button>
         </form>
         <Typography variant="h6" mt={4}>Existing Exercise Types</Typography>
-        <List>
+        <List sx={{ width: '100%' }}>
           {exerciseTypes.map(et => (
-            <ListItem key={et.id} sx={{ mb: 1, borderRadius: 2, background: '#f1f8e9' }}
+            <ListItem
+              key={et.id}
+              sx={{
+                mb: 2,
+                borderRadius: 2,
+                background: theme => theme.palette.background.default,
+                flexDirection: 'row',
+                alignItems: 'center',
+                boxShadow: 1,
+                p: 2,
+                gap: 3,
+              }}
               secondaryAction={
                 editingId === et.id ? null : (
                   <>
@@ -169,63 +180,41 @@ export default function ExerciseTypePage() {
                 )
               }
             >
-              {editingId === et.id ? (
-                <form onSubmit={handleEditSubmit} style={{ width: '100%' }} encType="multipart/form-data">
-                  <TextField
-                    value={editName}
-                    required
-                    fullWidth
-                    margin="dense"
-                    onChange={e => setEditName(e.target.value)}
+              {/* Square, large image */}
+              {et.photo_url && (
+                <Box
+                  sx={{
+                    width: 90,
+                    height: 90,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: '#fff',
+                    borderRadius: 0,
+                    boxShadow: 2,
+                    border: '2px solid #ccc',
+                    mr: 2,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={et.photo_url}
+                    alt={et.name}
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      display: 'block',
+                    }}
                   />
-                  <TextField
-                    value={editDescription}
-                    fullWidth
-                    margin="dense"
-                    onChange={e => setEditDescription(e.target.value)}
-                  />
-                  <FormControl fullWidth margin="dense">
-                    <InputLabel>Muscle Group</InputLabel>
-                    <Select
-                      value={editMuscleGroup}
-                      label="Muscle Group"
-                      onChange={e => setEditMuscleGroup(e.target.value)}
-                      required
-                    >
-                      {muscleGroups.map(group => (
-                        <MenuItem key={group} value={group}>{group}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <Button
-                    variant="contained"
-                    component="label"
-                    fullWidth
-                    sx={{ mt: 1 }}
-                  >
-                    {editPhoto ? editPhoto.name : 'Upload New Photo'}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      hidden
-                      onChange={e => setEditPhoto(e.target.files[0])}
-                    />
-                  </Button>
-                  <Box display="flex" gap={1} mt={1}>
-                    <Button type="submit" variant="contained" color="primary" size="small">Save</Button>
-                    <Button type="button" onClick={() => setEditingId(null)} size="small">Cancel</Button>
-                  </Box>
-                </form>
-              ) : (
-                <ListItemText
-                  primary={<Box display="flex" alignItems="center" gap={2}>
-                    {et.photo_url && <Avatar src={et.photo_url} alt={et.name} />}
-                    <span><strong>{et.name}</strong></span>
-                    <span style={{ fontSize: 12, color: '#666' }}>{et.muscle_group}</span>
-                  </Box>}
-                  secondary={et.description}
-                />
+                </Box>
               )}
+              <Box flex={1}>
+                <Typography variant="subtitle1" fontWeight={600}>{et.name}</Typography>
+                <Typography variant="body2" color="text.secondary">{et.muscle_group}</Typography>
+                <Typography variant="body2" color="text.secondary">{et.description}</Typography>
+              </Box>
             </ListItem>
           ))}
         </List>
