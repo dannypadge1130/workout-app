@@ -52,6 +52,12 @@ export default function WorkoutDetailPage() {
   // Add a new set to the selected exercise type
   const addSet = () => setSets([...sets, { reps: '', weight: '' }]);
 
+  // Remove a set before adding the exercise
+  const removeSet = (idx) => {
+    if (sets.length === 1) return; // Always keep at least one set
+    setSets(sets.filter((_, i) => i !== idx));
+  };
+
   // Handle changes to the sets
   const handleSetChange = (idx, field, value) => {
     const newSets = sets.slice();
@@ -144,12 +150,14 @@ export default function WorkoutDetailPage() {
   if (!workout) return <Alert severity="error">Workout not found.</Alert>;
 
   return (
-    <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
+    <Box sx={{ maxWidth: 700, mx: 'auto', mt: 4 }}>
       <Paper elevation={3} sx={{ p: 3 }}>
+        {/* Workout Header */}
         <Typography variant="h5" gutterBottom>Workout for {workout.date}</Typography>
-        <Box display="flex" alignItems="center" mb={2}>
-          <Typography variant="subtitle1" gutterBottom>
-            Today's Weight:&nbsp;
+        {/* Today's Weight under Workout data */}
+        <Box mb={2} display="flex" alignItems="center" gap={1}>
+          <Typography variant="subtitle1" gutterBottom sx={{ mr: 1 }}>
+            Today's Weight:
           </Typography>
           {editingWeight ? (
             <>
@@ -158,11 +166,11 @@ export default function WorkoutDetailPage() {
                 value={weightValue}
                 onChange={e => setWeightValue(e.target.value)}
                 size="small"
-                sx={{ width: 100, mr: 1 }}
+                sx={{ width: 100 }}
               />
               <IconButton onClick={handleSaveWeight} disabled={savingWeight}><SaveIcon /></IconButton>
               <IconButton onClick={handleCancelWeight} disabled={savingWeight}><CancelIcon /></IconButton>
-              {weightError && <Alert severity="error">{weightError}</Alert>}
+              {weightError && <Alert severity="error" sx={{ ml: 1 }}>{weightError}</Alert>}
             </>
           ) : (
             <>
@@ -171,6 +179,7 @@ export default function WorkoutDetailPage() {
             </>
           )}
         </Box>
+        {/* Add Exercise Form */}
         <Box mt={3} mb={2}>
           <Typography variant="h6">Add Exercise</Typography>
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -183,17 +192,55 @@ export default function WorkoutDetailPage() {
                 label="Exercise Type"
                 onChange={e => setSelectedType(e.target.value)}
                 required
+                renderValue={selected => {
+                  const et = exerciseTypes.find(et => et.id === selected);
+                  return et ? (
+                    <Box display="flex" alignItems="center" gap={1}>
+                      {et.photo_url && (
+                        <Box
+                          component="img"
+                          src={et.photo_url}
+                          alt={et.name}
+                          sx={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 0, mr: 1, boxShadow: 1, border: '2px solid #ccc' }}
+                        />
+                      )}
+                      <span>{et.name}</span>
+                    </Box>
+                  ) : <em>Select...</em>;
+                }}
               >
                 <MenuItem value=""><em>Select...</em></MenuItem>
                 {exerciseTypes.map(et => (
-                  <MenuItem key={et.id} value={et.id}>{et.name}</MenuItem>
+                  <MenuItem key={et.id} value={et.id}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      {et.photo_url && (
+                        <Box
+                          component="img"
+                          src={et.photo_url}
+                          alt={et.name}
+                          sx={{
+                            width: 40,
+                            height: 40,
+                            objectFit: 'contain',
+                            borderRadius: 0,
+                            mr: 1,
+                            boxShadow: 1,
+                            border: '2px solid #ccc',
+                            backgroundColor: '#fff',
+                          }}
+                        />
+                      )}
+                      <span>{et.name}</span>
+                      <Typography variant="caption" color="text.secondary" ml={1}>{et.muscle_group}</Typography>
+                    </Box>
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
             <Box>
               <Typography variant="subtitle2">Sets:</Typography>
               {sets.map((set, idx) => (
-                <Box key={idx} display="flex" gap={2} mb={1}>
+                <Box key={idx} display="flex" gap={2} mb={1} alignItems="center">
                   <TextField
                     label="Reps"
                     type="number"
@@ -210,6 +257,9 @@ export default function WorkoutDetailPage() {
                     required
                     size="small"
                   />
+                  <IconButton onClick={() => removeSet(idx)} color="error" size="small" disabled={sets.length === 1}>
+                    <DeleteIcon />
+                  </IconButton>
                 </Box>
               ))}
               <Button type="button" onClick={addSet} sx={{ mt: 1 }}>
@@ -221,33 +271,80 @@ export default function WorkoutDetailPage() {
             </Button>
           </form>
         </Box>
+        {/* Exercises List */}
         <Typography variant="h6" mt={4}>Exercises in this Workout</Typography>
         {workout.exercises.length === 0 && <Typography>No exercises yet.</Typography>}
-        <List>
+        <List sx={{ width: '100%' }}>
           {workout.exercises.map(ex => (
-            <ListItem key={ex.id} alignItems="flex-start" sx={{ flexDirection: 'column', alignItems: 'flex-start', mb: 2, borderRadius: 2, background: '#f1f8e9' }}>
-              <Typography variant="subtitle1" fontWeight={600}>{ex.exercise_type?.name}</Typography>
-              {editingExerciseId === ex.id ? (
-                <ExerciseEditForm
-                  exercise={ex}
-                  onSave={() => { setEditingExerciseId(null); setRefresh(r => !r); }}
-                  onCancel={handleCancelEdit}
-                />
-              ) : (
-                <>
-                  <List sx={{ width: '100%' }}>
-                    {ex.sets.map((set, i) => (
-                      <ListItem key={set.id} sx={{ pl: 0 }}>
-                        <ListItemText primary={`${set.reps} reps @ ${set.weight} lbs`} />
-                      </ListItem>
-                    ))}
-                  </List>
-                  <Box>
+            <ListItem
+              key={ex.id}
+              alignItems="flex-start"
+              sx={{
+                mb: 2,
+                borderRadius: 2,
+                background: theme => theme.palette.background.default,
+                flexDirection: 'row',
+                alignItems: 'center',
+                boxShadow: 1,
+                p: 2,
+                gap: 3,
+              }}
+            >
+              {/* Square, large image */}
+              {ex.exercise_type?.photo_url && (
+                <Box
+                  sx={{
+                    width: 90,
+                    height: 90,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: '#fff',
+                    borderRadius: 0,
+                    boxShadow: 2,
+                    border: '2px solid #ccc',
+                    mr: 2,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={ex.exercise_type.photo_url}
+                    alt={ex.exercise_type.name}
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      display: 'block',
+                    }}
+                  />
+                </Box>
+              )}
+              <Box flex={1}>
+                <Typography variant="subtitle1" fontWeight={600}>{ex.exercise_type?.name}</Typography>
+                <Typography variant="body2" color="text.secondary">{ex.exercise_type?.muscle_group}</Typography>
+                <List sx={{ width: '100%' }}>
+                  {ex.sets.map((set, i) => (
+                    <ListItem key={set.id} sx={{ pl: 0, py: 0.5 }}>
+                      <ListItemText primary={`${set.reps} reps @ ${set.weight} lbs`} />
+                    </ListItem>
+                  ))}
+                </List>
+              </Box>
+              <Box display="flex" flexDirection="column" gap={1}>
+                {editingExerciseId === ex.id ? (
+                  <ExerciseEditForm
+                    exercise={ex}
+                    onSave={() => { setEditingExerciseId(null); setRefresh(r => !r); }}
+                    onCancel={handleCancelEdit}
+                  />
+                ) : (
+                  <>
                     <IconButton onClick={() => handleEditExercise(ex.id)} size="small"><EditIcon /></IconButton>
                     <IconButton onClick={() => handleDeleteExercise(ex.id)} size="small" color="error"><DeleteIcon /></IconButton>
-                  </Box>
-                </>
-              )}
+                  </>
+                )}
+              </Box>
             </ListItem>
           ))}
         </List>
