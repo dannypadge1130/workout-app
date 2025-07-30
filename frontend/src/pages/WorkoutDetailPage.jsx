@@ -29,6 +29,8 @@ export default function WorkoutDetailPage() {
   const [weightValue, setWeightValue] = useState(workout?.todays_weight);
   const [weightError, setWeightError] = useState('');
   const [savingWeight, setSavingWeight] = useState(false);
+  const [previousExercise, setPreviousExercise] = useState(null);
+  const [loadingPrevious, setLoadingPrevious] = useState(false);
 
   // Fetch the workout data
   useEffect(() => {
@@ -63,6 +65,53 @@ export default function WorkoutDetailPage() {
     const newSets = sets.slice();
     newSets[idx][field] = value;
     setSets(newSets);
+  };
+
+  // Fetch previous exercise when exercise type is selected
+  const handleExerciseTypeChange = async (exerciseTypeId) => {
+    setSelectedType(exerciseTypeId);
+    if (!exerciseTypeId) {
+      setPreviousExercise(null);
+      return;
+    }
+
+    setLoadingPrevious(true);
+    try {
+      const res = await fetch(`${apiOrigin}/exercises?exercise_type_id=${exerciseTypeId}`, { 
+        credentials: 'include' 
+      });
+      if (res.ok) {
+        const exercises = await res.json();
+        if (exercises.length > 0) {
+          // Get the most recent exercise (excluding current workout)
+          const currentWorkoutExercises = exercises.filter(ex => ex.workout_id !== parseInt(id));
+          if (currentWorkoutExercises.length > 0) {
+            const mostRecent = currentWorkoutExercises.sort((a, b) => 
+              new Date(b.workout?.date) - new Date(a.workout?.date)
+            )[0];
+            setPreviousExercise(mostRecent);
+          } else {
+            setPreviousExercise(null);
+          }
+        } else {
+          setPreviousExercise(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching previous exercise:', error);
+      setPreviousExercise(null);
+    }
+    setLoadingPrevious(false);
+  };
+
+  // Use previous sets as starting point
+  const usePreviousSets = () => {
+    if (previousExercise && previousExercise.sets) {
+      setSets(previousExercise.sets.map(set => ({
+        reps: set.reps.toString(),
+        weight: set.weight.toString()
+      })));
+    }
   };
 
   // Handle adding a new exercise
@@ -190,7 +239,7 @@ export default function WorkoutDetailPage() {
                 labelId="exercise-type-label"
                 value={selectedType}
                 label="Exercise Type"
-                onChange={e => setSelectedType(e.target.value)}
+                onChange={e => handleExerciseTypeChange(e.target.value)}
                 required
                 renderValue={selected => {
                   const et = exerciseTypes.find(et => et.id === selected);
@@ -201,7 +250,16 @@ export default function WorkoutDetailPage() {
                           component="img"
                           src={et.photo_url}
                           alt={et.name}
-                          sx={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 0, mr: 1, boxShadow: 1, border: '2px solid #ccc' }}
+                          sx={{
+                            width: 40,
+                            height: 40,
+                            objectFit: 'contain',
+                            borderRadius: 0,
+                            mr: 1,
+                            boxShadow: 1,
+                            border: '2px solid #ccc',
+                            backgroundColor: '#fff',
+                          }}
                         />
                       )}
                       <span>{et.name}</span>
@@ -237,6 +295,46 @@ export default function WorkoutDetailPage() {
                 ))}
               </Select>
             </FormControl>
+            
+            {/* Previous Exercise Information */}
+            {selectedType && (
+              <Box mt={2} p={2} sx={{ background: theme => theme.palette.background.default, borderRadius: 1 }}>
+                {loadingPrevious ? (
+                  <Typography variant="body2" color="text.secondary">Loading previous workout...</Typography>
+                ) : previousExercise ? (
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Last performed: {previousExercise.workout?.date}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Previous sets:
+                    </Typography>
+                    <List dense>
+                      {previousExercise.sets.map((set, idx) => (
+                        <ListItem key={idx} sx={{ py: 0 }}>
+                          <ListItemText 
+                            primary={`${set.reps} reps @ ${set.weight} lbs`}
+                            sx={{ '& .MuiListItemText-primary': { fontSize: '0.875rem' } }}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                    <Button 
+                      onClick={usePreviousSets} 
+                      size="small" 
+                      variant="outlined" 
+                      sx={{ mt: 1 }}
+                    >
+                      Use Previous Sets
+                    </Button>
+                  </Box>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No previous workout found for this exercise type.
+                  </Typography>
+                )}
+              </Box>
+            )}
             <Box>
               <Typography variant="subtitle2">Sets:</Typography>
               {sets.map((set, idx) => (

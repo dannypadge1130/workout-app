@@ -224,7 +224,8 @@ def create_exercise_route():
 @login_required
 def list_exercises_route():
     workout_id = request.args.get('workout_id')
-    exercises = get_exercises(workout_id)
+    exercise_type_id = request.args.get('exercise_type_id')
+    exercises = get_exercises(workout_id, exercise_type_id)
     return jsonify([e.to_dict() for e in exercises])
 
 # Fetch an Exercise by ID

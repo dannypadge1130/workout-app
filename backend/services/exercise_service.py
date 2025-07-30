@@ -21,7 +21,13 @@ def get_exercise_by_id(exercise_id):
     return Exercise.query.get(exercise_id)
 
 # Get all exercises
-def get_exercises(workout_id=None):
+def get_exercises(workout_id=None, exercise_type_id=None):
+    query = Exercise.query
+    
     if workout_id:
-        return Exercise.query.filter_by(workout_id=workout_id).all()
-    return Exercise.query.all()
+        query = query.filter_by(workout_id=workout_id)
+    
+    if exercise_type_id:
+        query = query.filter_by(exercise_type_id=exercise_type_id)
+    
+    return query.all()

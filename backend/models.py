@@ -13,7 +13,7 @@ class Workout(db.Model):
     todays_weight = db.Column(db.Double, nullable=False)
 
     # Has a one-to-many relationship with exercises
-    exercises = db.relationship('Exercise', backref='workout', lazy=True, cascade='all, delete-orphan')
+    exercises = db.relationship('Exercise', backref='workout', cascade='all, delete-orphan')
 
     def __init__(self, date, todays_weight):
         self.date = date
